@@ -2,8 +2,11 @@
 
 #include <math.h>
 #include <stdint.h>
+
+#ifdef DEBUG
 #include <stdio.h>
 #include <stdlib.h>
+#endif
 
 // ret = 0
 inline void clear(double* ret, const int16_t row) {
@@ -81,7 +84,7 @@ inline void mul(double* ret, const double* mat, const double c, const int16_t ro
 inline void mul(double* ret, const double* mat, const double* vec, const int16_t row, const int16_t col) {
   int16_t i, j, idx;
 
-#ifndef NDEBUG
+#ifdef DEBUG
   if (ret == vec) {
     printf("%s pointer error !\n", __func__);
     exit(-1);

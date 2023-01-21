@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 3.0.0)
 
+# Compile options
+if(CMAKE_CXX_COMPILER_ID MATCHES GNU)
+    add_compile_options(-O3 -Wall)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES Clang)
+    add_compile_options(-O3 -Wall)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES MSVC)
+    add_compile_definitions(PRIVATE _USE_MATH_DEFINES)
+endif()
+
 # Enable Google test
 include(FetchContent)
 FetchContent_Declare(
