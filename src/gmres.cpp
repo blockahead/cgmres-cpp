@@ -3,6 +3,9 @@
 #include <float.h>
 #include <math.h>
 #include <stdint.h>
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 
 #include <memory>
 
@@ -49,7 +52,9 @@ void Gmres::gmres(double *x, const double *b, function<void(double *Ax, const do
 
     // Check breakdown
     if (fabs(H[idx_h]) < DBL_EPSILON) {
+#ifdef DEBUG
       printf("Breakdown\n");
+#endif
       return;
     } else {
       div(&V[idx_v1], &V[idx_v1], H[idx_h], len);
