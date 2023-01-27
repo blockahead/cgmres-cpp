@@ -21,6 +21,7 @@ endif()
 FetchContent_MakeAvailable(googletest)
 
 enable_testing()
+include(GoogleTest)
 
 add_executable(matrix_test
     matrix_test.cpp
@@ -31,5 +32,4 @@ target_include_directories(matrix_test
 target_link_libraries(matrix_test
     GTest::gtest_main
 )
-include(GoogleTest)
 gtest_discover_tests(matrix_test)
