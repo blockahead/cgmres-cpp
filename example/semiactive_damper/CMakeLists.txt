@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 3.0.0)
+get_filename_component(dirname "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+project("${dirname}")
 
 # Compile options
 if(CMAKE_CXX_COMPILER_ID MATCHES GNU)
     add_compile_options(-O3 -Wall)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES Clang)
+    add_compile_options(-O3 -Wall)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES MSVC)
+    add_compile_definitions(PRIVATE _USE_MATH_DEFINES)
 endif()
-
-# C/GMRES root directory
-# get_filename_component(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
 
 # Executables
 add_executable(${PROJECT_NAME}
@@ -17,5 +20,6 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PUBLIC ${CGMRES_SOURCE_DIR}/include
 )
-
-# enable_testing()
+target_link_libraries(${PROJECT_NAME}
+    openblas
+)

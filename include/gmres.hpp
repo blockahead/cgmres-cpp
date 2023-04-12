@@ -19,6 +19,7 @@ class Gmres {
   // --------------------
   // Parameters
   // --------------------
+  static constexpr uint16_t cblas_inc = 1;
   static constexpr uint16_t g_len = 3;
   const uint16_t len;
   const uint16_t k_max;

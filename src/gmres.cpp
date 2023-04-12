@@ -1,5 +1,6 @@
 #include "gmres.hpp"
 
+#include <cblas.h>
 #include <float.h>
 #include <math.h>
 #include <stdint.h>
@@ -12,9 +13,9 @@
 #include "matrix.hpp"
 
 void Gmres::gmres(double *x, const double *b, function<void(double *Ax, const double *x)> Ax_func) {
-  uint16_t k, idx_v1, idx_v2, idx_h, idx_g;
-  auto V = std::make_unique<double[]>((len) * (k_max + 1));
+  uint16_t k, idx_h, idx_v, idx_w, idx_g;
   auto H = std::make_unique<double[]>((k_max + 1) * (k_max + 1));
+  auto V = std::make_unique<double[]>((len) * (k_max + 1));
   auto rho = std::make_unique<double[]>(k_max + 1);
   auto g = std::make_unique<double[]>((g_len) * (k_max));
   auto U_buf = std::make_unique<double[]>(len);
@@ -22,44 +23,55 @@ void Gmres::gmres(double *x, const double *b, function<void(double *Ax, const do
 
   // r0 = b - Ax(x0)
   Ax_func(&V[0], x);
-  sub(&V[0], b, &V[0], len);
+  cblas_daxpby(len, 1.0, b, cblas_inc, -1.0, &V[0], cblas_inc);
 
-  // rho = sqrt(r0' * r0)
-  rho[0] = norm(&V[0], len);
+  // rho = ||r0||_2
+  rho[0] = cblas_dnrm2(len, &V[0], cblas_inc);
 
   if (rho[0] < tol) {
     return;
   }
 
-  // V(0) = r0 / rho
-  div(&V[0], &V[0], rho[0], len);
+  // V(0) = r0 / ||r0||_2
+  cblas_dscal(len, 1.0 / rho[0], &V[0], cblas_inc);
 
   for (k = 0; k < k_max; k++) {
-    // V(k + 1) = Ax(v(k))
+    // Krylov subspace
+    // V = [v0, ..., vk, Ax(vk)]
     Ax_func(&V[len * (k + 1)], &V[len * k]);
 
-    idx_v1 = len * (k + 1);
     // Modified Gram-Schmidt
-    for (uint16_t i = 0; i < k + 1; i++) {
-      idx_v2 = len * i;
-      idx_h = (k_max + 1) * k + i;
-      H[idx_h] = dot(&V[idx_v2], &V[idx_v1], len);
-      mul(U_buf.get(), &V[idx_v2], H[idx_h], len);
-      sub(&V[idx_v1], &V[idx_v1], U_buf.get(), len);
+    // w = V(k+1)
+    // h = H(k)
+    idx_w = len * (k + 1);
+    idx_h = (k_max + 1) * k;
+
+    for (uint16_t i = 0; i <= k; i++) {
+      // v = V(i)
+      idx_v = len * i;
+
+      // h(i) = (w, v)
+      // w = w - h(i) * v
+      H[idx_h + i] = cblas_ddot(len, &V[idx_w], cblas_inc, &V[idx_v], cblas_inc);
+      cblas_daxpy(len, -H[idx_h + i], &V[idx_v], cblas_inc, &V[idx_w], cblas_inc);
     }
-    idx_h = (k_max + 1) * k + (k + 1);
-    H[idx_h] = norm(&V[idx_v1], len);
+
+    // h(k+1) = ||w||_2
+    H[idx_h + (k + 1)] = cblas_dnrm2(len, &V[idx_w], cblas_inc);
 
     // Check breakdown
-    if (fabs(H[idx_h]) < DBL_EPSILON) {
+    // Stop if ||w||_2 == 0
+    // TODO: should be positive?
+    if (fabs(H[idx_h + (k + 1)]) < DBL_EPSILON) {
 #ifdef DEBUG
       printf("Breakdown\n");
 #endif
       return;
     } else {
-      div(&V[idx_v1], &V[idx_v1], H[idx_h], len);
+      // V(k) = w / ||w||_2
+      cblas_dscal(len, 1.0 / H[idx_h + (k + 1)], &V[idx_w], cblas_inc);
     }
-
+    // TODO: ここまで完了
     // Transformation H to upper triangular matrix by Householder transformation
     for (uint16_t i = 0; i < k; i++) {
       idx_h = (k_max + 1) * k + i;
