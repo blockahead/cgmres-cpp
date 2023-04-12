@@ -23,13 +23,15 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 include(GoogleTest)
 
-add_executable(matrix_test
-    matrix_test.cpp
+# Test for cblas
+add_executable(cblas_test
+    cblas_test.cpp
 )
-target_include_directories(matrix_test
+target_include_directories(cblas_test
     PRIVATE ${CGMRES_SOURCE_DIR}/include
 )
-target_link_libraries(matrix_test
+target_link_libraries(cblas_test
+    openblas
     GTest::gtest_main
 )
-gtest_discover_tests(matrix_test)
+gtest_discover_tests(cblas_test)
