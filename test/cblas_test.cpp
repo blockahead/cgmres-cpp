@@ -54,8 +54,7 @@ TEST(cblas, sub_vec) {
   double x[LEN] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   double y[LEN] = {2, 2, 2, 2, 2, 2, 2, 2, 2};
 
-  cblas_dscal(LEN, -1.0, y, CblasInc);
-  cblas_daxpy(LEN, 1.0, x, CblasInc, y, CblasInc);
+  cblas_daxpby(LEN, 1.0, x, CblasInc, -1.0, y, CblasInc);
 
   for (int i = 0; i < LEN; i++) {
     EXPECT_FLOAT_EQ(-1.0, y[i]);
@@ -66,8 +65,7 @@ TEST(cblas, sub_mat) {
   double A[ROW * COL] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   double B[ROW * COL] = {2, 2, 2, 2, 2, 2, 2, 2, 2};
 
-  cblas_dscal(ROW * COL, -1.0, B, CblasInc);
-  cblas_daxpy(ROW * COL, 1.0, A, CblasInc, B, CblasInc);
+  cblas_daxpby(ROW * COL, 1.0, A, CblasInc, -1.0, B, CblasInc);
 
   for (int i = 0; i < ROW * COL; i++) {
     EXPECT_FLOAT_EQ(-1.0, B[i]);
